@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: log-collector-splunk
+  threads:
+    virtual:
+      enabled: true
+  ai:
+    retry:
+      max-attempts: 3
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-placeholder}
+      chat:
+        options:
+          model: gpt-4o
+    vertex:
+      ai:
+        gemini:
+          project-id: ${GEMINI_PROJECT_ID:placeholder}
+          location: ${GEMINI_LOCATION:us-central1}
+          chat:
+            options:
+              model: gemini-pro
+    bedrock:
+      aws:
+        region: ${AWS_REGION:us-east-1}
+        access-key: ${AWS_ACCESS_KEY:placeholder}
+        secret-key: ${AWS_SECRET_KEY:placeholder}
+      anthropic:
+        chat:
+          options:
+            model: anthropic.claude-v2
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:placeholder}
+      chat:
+        options:
+            model: claude-3-opus-20240229
+
+splunk:
+  host: ${SPLUNK_HOST:localhost}
+  port: ${SPLUNK_PORT:8089}
+  username: ${SPLUNK_USERNAME:admin}
+  password: ${SPLUNK_PASSWORD:changeme}
