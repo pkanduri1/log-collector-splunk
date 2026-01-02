@@ -1,5 +1,6 @@
 com/example/logcollector/service/SplunkService.class
 com/example/logcollector/model/LogAnalysisResponse.class
+com/example/logcollector/service/LogAnalysisAgent.class
 com/example/logcollector/LogCollectorApplication.class
 com/example/logcollector/config/WebConfig.class
 com/example/logcollector/service/IntelligentSearchService.class

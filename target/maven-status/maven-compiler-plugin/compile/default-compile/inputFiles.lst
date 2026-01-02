@@ -1,4 +1,5 @@
 /Users/pavankanduri/google-agy/log-collector-splunk/src/main/java/com/example/logcollector/config/WebConfig.java
+/Users/pavankanduri/google-agy/log-collector-splunk/src/main/java/com/example/logcollector/service/LogAnalysisAgent.java
 /Users/pavankanduri/google-agy/log-collector-splunk/src/main/java/com/example/logcollector/service/IntelligentSearchService.java
 /Users/pavankanduri/google-agy/log-collector-splunk/src/main/java/com/example/logcollector/LogCollectorApplication.java
 /Users/pavankanduri/google-agy/log-collector-splunk/src/main/java/com/example/logcollector/service/SplunkService.java
