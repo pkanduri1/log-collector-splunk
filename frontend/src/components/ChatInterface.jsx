@@ -7,6 +7,11 @@ const EXAMPLE_PROMPTS = [
     "List unique users who failed login"
 ];
 
+/**
+ * ChatInterface Component
+ * Renders the main chat UI for interacting with the Splunk Intelligent Layer.
+ * Manages message state, input handling, and backend API communication.
+ */
 export default function ChatInterface() {
     const [messages, setMessages] = useState([
         { id: 1, type: 'bot', content: 'Hello! I am your Splunk AI Assistant. Ask me anything about your logs.' }
@@ -15,12 +20,22 @@ export default function ChatInterface() {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
 
+    /**
+     * Scrolls the chat window to the bottom.
+     * Triggered automatically when new messages are added.
+     */
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     useEffect(scrollToBottom, [messages]);
 
+    /**
+     * Handles the submission of a user message.
+     * Sends the question to the backend and updates the UI with the response.
+     * 
+     * @param {Event} e - The form submission event.
+     */
     const handleSubmit = async (e) => {
         e?.preventDefault();
         if (!input.trim() || isLoading) return;
@@ -44,7 +59,7 @@ export default function ChatInterface() {
             const botMessage = {
                 id: Date.now() + 1,
                 type: 'bot',
-                content: data.humanSummary,
+                content: data.aiSummary, // Updated to use aiSummary matching backend DTO
                 spl: data.generatedSpl
             };
 

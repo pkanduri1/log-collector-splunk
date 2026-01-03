@@ -7,10 +7,13 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
+/**
+ * Service for interacting with the Splunk SDK.
+ * Handles authentication and executing blocking search jobs.
+ */
 public class SplunkService {
 
     @Value("${splunk.host}")
@@ -25,6 +28,12 @@ public class SplunkService {
     @Value("${splunk.password}")
     private String password;
 
+    /**
+     * Connects to the Splunk Service.
+     * Note: Disables SSL validation for Dev purposes.
+     * 
+     * @return The authenticated Service instance.
+     */
     private com.splunk.Service connect() {
         ServiceArgs serviceArgs = new ServiceArgs();
         serviceArgs.setHost(host);
@@ -40,6 +49,13 @@ public class SplunkService {
         return com.splunk.Service.connect(serviceArgs);
     }
 
+    /**
+     * Executes a blocking search query on Splunk.
+     * 
+     * @param splQuery The raw SPL query to execute (e.g., "search index=main | head
+     *                 5").
+     * @return A list of raw log strings found.
+     */
     public List<String> executeSearch(String splQuery) {
         com.splunk.Service service = connect();
 

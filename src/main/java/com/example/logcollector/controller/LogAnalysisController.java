@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/logs")
+/**
+ * REST Controller for Log Analysis operations.
+ * Exposes endpoints to analyze logs using Intelligent Search.
+ */
 public class LogAnalysisController {
 
     private final IntelligentSearchService intelligentSearchService;
@@ -18,6 +22,12 @@ public class LogAnalysisController {
         this.intelligentSearchService = intelligentSearchService;
     }
 
+    /**
+     * Analyzes a natural language question about logs.
+     * 
+     * @param request The request containing the user's question.
+     * @return LogAnalysisResponse containing the generated SPL and AI summary.
+     */
     @PostMapping("/analyze")
     public LogAnalysisResponse analyze(@RequestBody LogAnalysisRequest request) {
         return intelligentSearchService.processQuery(request.question());

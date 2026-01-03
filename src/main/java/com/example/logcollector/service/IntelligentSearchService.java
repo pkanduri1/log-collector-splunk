@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * Service orchestrating the Intelligent Search workflow.
+ * Combines LangChain4j Agents and Splunk Service to answer user questions.
+ */
 public class IntelligentSearchService {
 
     private final SplunkService splunkService;
@@ -17,6 +21,16 @@ public class IntelligentSearchService {
         this.logAnalysisAgent = logAnalysisAgent;
     }
 
+    /**
+     * Processes a user's natural language question.
+     * 1. Converts question to SPL.
+     * 2. Executes search in Splunk.
+     * 3. Summarizes results using AI.
+     * 
+     * @param userQuestion The natural language question (e.g., "Why did batch
+     *                     fail?").
+     * @return The complete analysis response.
+     */
     public LogAnalysisResponse processQuery(String userQuestion) {
         // Step A: Text-to-SPL via LangChain4j Agent
         String splQuery = logAnalysisAgent.convertToSpl(userQuestion);
