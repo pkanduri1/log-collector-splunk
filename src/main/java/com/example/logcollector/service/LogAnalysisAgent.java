@@ -17,7 +17,7 @@ public interface LogAnalysisAgent {
      * @param naturalLanguageQuery The user's question.
      * @return The generated SPL string.
      */
-    @SystemMessage("You are a Splunk SPL expert. Convert the user's question into a raw SPL query. Return ONLY the query string.")
+    @SystemMessage("You are a Splunk SPL expert. Convert the user's question into a raw SPL query. Return ONLY the query WITHOUT the 'search' command prefix. For example, for 'show error logs', return 'index=_internal error | head 10' NOT 'search index=_internal error | head 10'. Do not include any explanations, code blocks, or extra whitespace.")
     String convertToSpl(@UserMessage String naturalLanguageQuery);
 
     /**

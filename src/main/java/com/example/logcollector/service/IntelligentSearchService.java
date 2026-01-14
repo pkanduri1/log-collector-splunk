@@ -32,26 +32,38 @@ public class IntelligentSearchService {
      * @return The complete analysis response.
      */
     public LogAnalysisResponse processQuery(String userQuestion) {
-        // Step A: Text-to-SPL via LangChain4j Agent
-        String splQuery = logAnalysisAgent.convertToSpl(userQuestion);
+        try {
+            // Step A: Text-to-SPL via LangChain4j Agent
+            String splQuery = logAnalysisAgent.convertToSpl(userQuestion);
 
-        // Sanitize output just in case
-        splQuery = splQuery.replace("```splunk", "").replace("```", "").trim();
+            // Sanitize output - remove markdown code blocks, trim, and normalize spaces
+            splQuery = splQuery.replace("```splunk", "").replace("```", "").trim();
+            splQuery = splQuery.replaceAll("\\s+", " ").trim(); // Normalize multiple spaces to single space
 
-        // Step B: Search Splunk
-        List<String> rawLogs = splunkService.executeSearch(splQuery);
+            // Step B: Search Splunk
+            List<String> rawLogs = splunkService.executeSearch(splQuery);
 
-        // Step C: Summarize
-        String aiSummary;
-        if (rawLogs.isEmpty()) {
-            aiSummary = "No logs were found for the generated SPL: " + splQuery;
-        } else {
-            String logsContent = rawLogs.stream().limit(50).collect(Collectors.joining("\n"));
-            // Step D: AI Summary via LangChain4j Agent
-            aiSummary = logAnalysisAgent.summarizeLogs(logsContent);
+            // Step C: Summarize
+            String aiSummary;
+            if (rawLogs.isEmpty()) {
+                aiSummary = "No logs were found for the generated SPL: " + splQuery;
+            } else {
+                String logsContent = rawLogs.stream().limit(50).collect(Collectors.joining("\n"));
+                // Step D: AI Summary via LangChain4j Agent
+                aiSummary = logAnalysisAgent.summarizeLogs(logsContent);
+            }
+
+            // Return Response
+            return new LogAnalysisResponse(userQuestion, splQuery, aiSummary);
+
+        } catch (Exception e) {
+            // Fallback for AI errors (e.g., quota exceeded, model not found)
+            String errorMessage = "AI processing failed: " + e.getMessage();
+            if (e.getMessage().contains("quota")) {
+                errorMessage = "OpenAI Error: Insufficient Quota. Please check your billing.";
+            }
+            return new LogAnalysisResponse(userQuestion, "N/A", errorMessage);
         }
 
-        // Return Response
-        return new LogAnalysisResponse(userQuestion, splQuery, aiSummary);
     }
 }

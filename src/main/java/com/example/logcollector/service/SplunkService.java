@@ -35,16 +35,46 @@ public class SplunkService {
      * @return The authenticated Service instance.
      */
     private com.splunk.Service connect() {
+        // Ensure SSL bypass is active globally before connecting
+        com.example.logcollector.util.SslTrustManagerHelper.trustAllCertificates();
+
         ServiceArgs serviceArgs = new ServiceArgs();
         serviceArgs.setHost(host);
         serviceArgs.setPort(port);
         serviceArgs.setUsername(username);
         serviceArgs.setPassword(password);
+        serviceArgs.setScheme("https"); // Explicitly set HTTPS scheme
 
-        // Disable certificate validation for POC/Dev
-        HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
-        // Note: For real production, you might need proper SSL context or check
-        // certificates.
+        // Explicitly disable certificate validation for SDK
+        try {
+            javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[] {
+                    new javax.net.ssl.X509TrustManager() {
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                        }
+
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+                        }
+                    }
+            };
+
+            javax.net.ssl.SSLContext sc = javax.net.ssl.SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+
+            // Set the socket factory for the Splunk SDK's HttpService
+            HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+            // Assuming SDK uses HttpsURLConnection.setDefaultSSLSocketFactory if not set,
+            // but we already did that globally.
+            // Let's re-force it here just before connection.
+            javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+            javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return com.splunk.Service.connect(serviceArgs);
     }
@@ -59,9 +89,16 @@ public class SplunkService {
     public List<String> executeSearch(String splQuery) {
         com.splunk.Service service = connect();
 
-        // Ensure query starts with search if not present, though usually full SPL
-        // implies it
-        String finalQuery = splQuery.trim().toLowerCase().startsWith("search") ? splQuery : "search " + splQuery;
+        // Normalize the query: trim and ensure it starts with "search" command
+        String normalizedQuery = splQuery.trim();
+
+        // Remove "search" if it's already there, then add it back to ensure proper
+        // formatting
+        if (normalizedQuery.toLowerCase().startsWith("search ")) {
+            normalizedQuery = normalizedQuery.substring(7).trim(); // Remove "search " prefix
+        }
+
+        String finalQuery = "search " + normalizedQuery;
 
         JobArgs jobArgs = new JobArgs();
         jobArgs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);

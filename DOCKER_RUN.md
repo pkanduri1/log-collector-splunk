@@ -16,7 +16,7 @@ The application requires an OpenAI API Key. You can pass this as an environment 
 Navigate to the project root and run:
 
 ```bash
-OPENAI_API_KEY=your-api-key-here docker-compose up --build
+OPENAI_API_KEY=your-api-key-here docker compose up --build
 ```
 > Replace `your-api-key-here` with your actual OpenAI API Key.
 
@@ -39,8 +39,23 @@ extra_hosts:
   - "host.docker.internal:host-gateway"
 ```
 
+### Port 8080 already in use
+If you see `bind: address already in use`, something is already running on port 8080 (likely a local instance of the app).
+**Option 1: Kill the process**
+```bash
+lsof -i :8080
+kill -9 <PID>
+```
+**Option 2: Use a different port**
+Run with `BACKEND_PORT` variable (requires updating docker-compose.yml to use it, or just edit the file):
+```bash
+# In docker-compose.yml, change ports:
+ports:
+  - "8081:8080"
+```
+
 ### Rebuilding
 If you make code changes, ensure you rebuild the images:
 ```bash
-docker-compose up --build --force-recreate
+docker compose up --build --force-recreate
 ```

@@ -46,7 +46,8 @@ export default function ChatInterface() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8080/analyze', {
+            // Use relative path so Nginx can proxy it to the backend container (backend:8080)
+            const response = await fetch('/api/logs/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: userMessage.content }),

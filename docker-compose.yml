@@ -4,10 +4,17 @@ services:
   backend:
     build: .
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       - SPLUNK_HOST=host.docker.internal
+      - SPLUNK_PORT=${SPLUNK_PORT:-8089}
+      - SPLUNK_USERNAME=${SPLUNK_USERNAME:-admin}
+      - SPLUNK_PASSWORD=${SPLUNK_PASSWORD:-Password123}
+      - AI_PROVIDER=${AI_PROVIDER:-anthropic}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_AI_GEMINI_API_KEY=${GOOGLE_AI_GEMINI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
