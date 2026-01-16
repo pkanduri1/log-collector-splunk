@@ -1,9 +1,27 @@
+app:
+  demo-mode: ${DEMO_MODE:false}  # Set to true to skip Splunk connection
+
 spring:
   application:
     name: log-collector-splunk
   threads:
     virtual:
       enabled: true
+  # H2 Database Configuration
+  datasource:
+    url: jdbc:h2:file:./data/queryhistory;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
   # ai:
   #   retry:
   #     max-attempts: 3
@@ -14,11 +32,21 @@ spring:
   #         model: gpt-4o
 
 langchain4j:
+  anthropic:
+    chat-model:
+      api-key: ${ANTHROPIC_API_KEY}
+      model-name: claude-sonnet-4-20250514
+      temperature: 0.0
   open-ai:
     chat-model:
       api-key: ${OPENAI_API_KEY:demo}
       model-name: gpt-4
       temperature: 0.0
+  # google-ai-gemini:
+  #   chat-model:
+  #     api-key: ${GEMINI_API_KEY:demo}
+  #     model-name: gemini-pro
+  #     temperature: 0.0
 
 splunk:
   host: ${SPLUNK_HOST:localhost}

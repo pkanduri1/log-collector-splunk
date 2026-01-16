@@ -4,8 +4,12 @@ import com.splunk.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +35,7 @@ public class SplunkService {
     /**
      * Connects to the Splunk Service.
      * Note: Disables SSL validation for Dev purposes.
-     * 
+     *
      * @return The authenticated Service instance.
      */
     private com.splunk.Service connect() {
@@ -40,11 +44,25 @@ public class SplunkService {
         serviceArgs.setPort(port);
         serviceArgs.setUsername(username);
         serviceArgs.setPassword(password);
+        serviceArgs.setScheme("https");
 
-        // Disable certificate validation for POC/Dev
+        // Set SSL protocol and disable certificate validation for Splunk SDK
         HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
-        // Note: For real production, you might need proper SSL context or check
-        // certificates.
+
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+                }
+            };
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpService.setSSLSocketFactory(sc.getSocketFactory());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to configure SSL for Splunk", e);
+        }
 
         return com.splunk.Service.connect(serviceArgs);
     }
@@ -59,9 +77,20 @@ public class SplunkService {
     public List<String> executeSearch(String splQuery) {
         com.splunk.Service service = connect();
 
-        // Ensure query starts with search if not present, though usually full SPL
-        // implies it
-        String finalQuery = splQuery.trim().toLowerCase().startsWith("search") ? splQuery : "search " + splQuery;
+        String trimmedQuery = splQuery.trim();
+        String lowerQuery = trimmedQuery.toLowerCase();
+
+        // Don't prepend "search" for commands that must be first (savedsearch, rest, etc.)
+        String finalQuery;
+        if (lowerQuery.startsWith("search") ||
+            lowerQuery.startsWith("| savedsearch") ||
+            lowerQuery.startsWith("|savedsearch") ||
+            lowerQuery.startsWith("| rest") ||
+            lowerQuery.startsWith("|rest")) {
+            finalQuery = trimmedQuery;
+        } else {
+            finalQuery = "search " + trimmedQuery;
+        }
 
         JobArgs jobArgs = new JobArgs();
         jobArgs.setExecutionMode(JobArgs.ExecutionMode.BLOCKING);
@@ -72,6 +101,7 @@ public class SplunkService {
         // Reading results
         JobResultsArgs resultsArgs = new JobResultsArgs();
         resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
+        resultsArgs.setCount(0); // 0 means return all results (no pagination limit)
 
         List<String> rawLogs = new ArrayList<>();
 
@@ -96,5 +126,22 @@ public class SplunkService {
         }
 
         return rawLogs;
+    }
+
+    /**
+     * Lists all saved searches (reports) from Splunk.
+     *
+     * @return A list of report names.
+     */
+    public List<String> listSavedSearches() {
+        com.splunk.Service service = connect();
+        List<String> reports = new ArrayList<>();
+
+        SavedSearchCollection savedSearches = service.getSavedSearches();
+        for (SavedSearch search : savedSearches.values()) {
+            reports.add(search.getName());
+        }
+
+        return reports;
     }
 }
